@@ -1,4 +1,16 @@
 const TOKEN_KEY = 'levelup.token';
+const SERVER_KEY = 'levelup.server';
+
+/** True inside the Android app, where the page is bundled and the server is somewhere else. */
+export const isNativeApp = () => !!(window as any).Capacitor?.isNativePlatform?.();
+
+export const getServer = () => { try { return localStorage.getItem(SERVER_KEY) ?? ''; } catch { return ''; } };
+export const setServer = (url: string) => {
+  const clean = url.trim().replace(/\/+$/, '');
+  if (clean) localStorage.setItem(SERVER_KEY, clean); else localStorage.removeItem(SERVER_KEY);
+};
+/** Base URL for API calls. In a browser served by the API it is relative; in the app it is the saved server address. */
+const base = () => (isNativeApp() ? getServer() : '');
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t: string | null) => (t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY));
@@ -12,7 +24,7 @@ export class ApiError extends Error {
 export async function api<T = any>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`/api${path}`, {
+    res = await fetch(`${base()}/api${path}`, {
       method,
       headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -41,7 +53,7 @@ export const del = <T = any>(p: string, b?: unknown) => api<T>('DELETE', p, b);
 
 /** Download an authenticated file (export) through the browser. */
 export async function download(path: string, filename: string) {
-  const res = await fetch(`/api${path}`, { headers: { Authorization: `Bearer ${getToken()}` } });
+  const res = await fetch(`${base()}/api${path}`, { headers: { Authorization: `Bearer ${getToken()}` } });
   if (!res.ok) throw new ApiError(res.status, 'Download failed');
   const url = URL.createObjectURL(await res.blob());
   const a = Object.assign(document.createElement('a'), { href: url, download: filename });

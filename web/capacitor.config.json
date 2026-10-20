@@ -1,0 +1,9 @@
+{
+  "appId": "com.levelup.app",
+  "appName": "LEVEL UP",
+  "webDir": "dist",
+  "backgroundColor": "#070817",
+  "android": {
+    "allowMixedContent": true
+  }
+}

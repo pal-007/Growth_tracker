@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { post } from '../lib/api';
+import { getServer, isNativeApp, post, setServer } from '../lib/api';
 import { useApp } from '../store';
 import { Field } from '../components/ui';
 
@@ -11,10 +11,16 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const native = isNativeApp();
+  const [server, setSrv] = useState(getServer() || 'http://');
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (native) {
+      if (!/^https?:\/\/[^/\s]+/i.test(server.trim())) { setError('Enter your server address, like http://192.168.1.23:4000'); return; }
+      setServer(server);
+    }
     setBusy(true);
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -43,6 +49,7 @@ export default function Auth() {
               </button>
             ))}
           </div>
+          {native && <Field label="Server address" hint="Where LEVEL UP is running, for example http://192.168.1.23:4000 (same Wi-Fi) or your https web address."><input className="input" inputMode="url" autoCapitalize="none" autoCorrect="off" value={server} onChange={(e) => setSrv(e.target.value)} /></Field>}
           {mode === 'register' && <Field label="Your name"><input className="input" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoComplete="name" /></Field>}
           <Field label="Email"><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" /></Field>
           <Field label="Password" hint={mode === 'register' ? 'At least 8 characters.' : undefined}>

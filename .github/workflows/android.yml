@@ -1,0 +1,64 @@
+name: Build Android APK
+
+# Builds an installable LEVEL UP app (.apk) on GitHub's servers.
+# Run it from the Actions tab ("Run workflow"), or it runs when the web app changes.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/android.yml']
+
+permissions:
+  contents: write   # lets the job publish the APK as a release
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install and build the web app
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Copy the web app into the Android project
+        working-directory: web
+        run: npx cap sync android
+
+      - name: Build the debug APK
+        working-directory: web/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Name the file
+        run: cp web/android/app/build/outputs/apk/debug/app-debug.apk LEVEL-UP.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LEVEL-UP-apk
+          path: LEVEL-UP.apk
+
+      - name: Publish as the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk-latest --cleanup-tag --yes || true
+          gh release create apk-latest LEVEL-UP.apk \
+            --title "LEVEL UP for Android" \
+            --notes "Latest Android build of LEVEL UP. Download LEVEL-UP.apk on your phone and install it. Built from commit ${GITHUB_SHA::7}." \
+            --target "$GITHUB_SHA"

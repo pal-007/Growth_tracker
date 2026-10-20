@@ -30,6 +30,22 @@ voice, reminders, CSV/JSON export, sample data, reset). Responsive: sidebar on d
 Voice and reminders run in the browser and only with your permission. Spoken replies are off until you turn them on,
 the microphone is used only when you press the mic button, and reminders only fire while the app is open in a tab.
 
+## Android app (APK)
+
+The `web/android` folder is the Android version of the app (built with Capacitor). GitHub builds it for you:
+
+1. On GitHub, open the repo's **Actions** tab, choose **Build Android APK**, and click **Run workflow**
+   (it also runs automatically when the web app changes). It takes about 5 to 10 minutes.
+2. When it finishes, open **Releases** on the repo's front page and download **LEVEL-UP.apk** on your phone
+   (or download the `LEVEL-UP-apk` file from the finished run).
+3. Open the file on your phone and install it. Android will ask you to allow installs from your browser or
+   Files app once. This is a debug build for personal use, not a Play Store release.
+4. On the app's login screen, enter your **server address**: the computer running LEVEL UP on the same Wi-Fi,
+   for example `http://192.168.1.23:4000`, or your hosted `https://` address.
+
+The app is the interface only. Your data lives on the server, so the server must be running and reachable.
+Voice input and browser notifications need a secure (`https`) server address.
+
 ---
 
 # API reference
