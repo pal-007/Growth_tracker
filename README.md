@@ -3,7 +3,8 @@
 *One day at a time. One level at a time.*
 
 REST API for the LEVEL UP personal growth app: routines, goals, habits, journal, focus timer,
-analytics, weekly review, XP and achievements. Node 20+, TypeScript, Express, SQLite, JWT auth.
+analytics, weekly review, XP and achievements. Node 22.13+, TypeScript, Express, JWT auth, and Node's built-in
+SQLite (no native compilation, so `npm install` works on Windows without Visual Studio).
 
 ## Quick start
 
@@ -12,6 +13,7 @@ npm install
 cp .env.example .env        # then edit JWT_SECRET
 npm run dev                 # http://localhost:4000
 npm test                    # 13 end-to-end tests, in-memory database
+# Node prints "SQLite is an experimental feature" on start. That warning is expected.
 npm run build && npm start  # production
 ```
 

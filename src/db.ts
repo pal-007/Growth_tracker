@@ -1,9 +1,54 @@
-import Database from 'better-sqlite3';
+import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from './config.js';
 
-export type DB = Database.Database;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export interface Stmt {
+  run(...params: any[]): { changes: number | bigint; lastInsertRowid: number | bigint };
+  get(...params: any[]): any;
+  all(...params: any[]): any[];
+}
+
+/**
+ * Thin wrapper over Node's built-in SQLite (node:sqlite) so the app needs no native
+ * compilation. It offers prepare/exec/transaction/close, which is all the API uses.
+ */
+export class DB {
+  private depth = 0;
+  constructor(private readonly raw: DatabaseSync) {}
+
+  prepare(sql: string): Stmt {
+    return this.raw.prepare(sql) as unknown as Stmt;
+  }
+
+  exec(sql: string): void {
+    this.raw.exec(sql);
+  }
+
+  /** Returns a function that runs `fn` atomically. Nested calls become savepoints. */
+  transaction<A extends any[], R>(fn: (...args: A) => R): (...args: A) => R {
+    return (...args: A) => {
+      const name = `sp_${this.depth}`;
+      this.raw.exec(this.depth === 0 ? 'BEGIN' : `SAVEPOINT ${name}`);
+      this.depth++;
+      try {
+        const out = fn(...args);
+        this.depth--;
+        this.raw.exec(this.depth === 0 ? 'COMMIT' : `RELEASE ${name}`);
+        return out;
+      } catch (e) {
+        this.depth--;
+        this.raw.exec(this.depth === 0 ? 'ROLLBACK' : `ROLLBACK TO ${name}; RELEASE ${name}`);
+        throw e;
+      }
+    };
+  }
+
+  close(): void {
+    this.raw.close();
+  }
+}
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
@@ -145,9 +190,8 @@ CREATE TABLE IF NOT EXISTS achievements (
 
 export function openDb(file: string = config.databasePath): DB {
   if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
-  const db = new Database(file);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
+  const db = new DB(new DatabaseSync(file));
+  db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA);
   return db;
 }
