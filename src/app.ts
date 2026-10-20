@@ -1,4 +1,7 @@
 import cors from 'cors';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { authRouter, profileRouter, requireAuth } from './auth.js';
 import { config } from './config.js';
@@ -50,6 +53,13 @@ export function createApp(db: DB) {
     api.use(mk(db));
   }
   app.use('/api', api);
+
+  // Serve the built web app (web/dist) from the same server, so one command runs everything.
+  const webDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'web', 'dist');
+  if (fs.existsSync(path.join(webDist, 'index.html'))) {
+    app.use(express.static(webDist, { index: false, maxAge: '1h' }));
+    app.get(/^\/(?!api(\/|$)|health$).*/, (_req, res) => res.sendFile(path.join(webDist, 'index.html')));
+  }
 
   app.use((_req, _res, next) => next(new HttpError(404, 'Route not found')));
   app.use(errorMiddleware);

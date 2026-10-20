@@ -1,12 +1,40 @@
-# LEVEL UP API
+# LEVEL UP
 
 *One day at a time. One level at a time.*
 
-REST API for the LEVEL UP personal growth app: routines, goals, habits, journal, focus timer,
-analytics, weekly review, XP and achievements. Node 22.13+, TypeScript, Express, JWT auth, and Node's built-in
-SQLite (no native compilation, so `npm install` works on Windows without Visual Studio).
+A personal growth app: daily routine checklist, goals and milestones, habits, focus timer, analytics,
+journal, weekly review, XP and achievements, and a voice assistant. It is a React web app (`web/`) served by a
+Node + Express + SQLite API (`src/`). Everything works without AI or paid services.
 
-## Quick start
+## Run the app (one command)
+
+Needs Node.js 22.13 or newer. From this folder:
+
+```bash
+npm install
+cp .env.example .env     # then open .env and set JWT_SECRET to any long random text
+npm run app              # installs and builds the web app, then starts everything
+```
+
+Open **http://localhost:4000**, create an account, and you're in. Next time, `npm run start:app` is enough
+(run `npm run app` again after pulling updates to rebuild the web app).
+
+For development with live reload, run `npm run dev` (API on :4000) and, in a second terminal, `npm --prefix web run dev` (web on :5173).
+
+### What's in the app
+Dashboard, My Routine (animated checkboxes, confetti, optional sound, drag to reorder, filters, quick add by typing or voice),
+Goals, Habits, Focus Timer (Pomodoro, ambient sounds, distraction-free screen), Growth Analytics (line and bar charts,
+heatmap, weekly report), Journal (mood and energy), Weekly Review (plan next week), Achievements, Settings (dark/light theme,
+voice, reminders, CSV/JSON export, sample data, reset). Responsive: sidebar on desktop, bottom navigation on phones.
+
+Voice and reminders run in the browser and only with your permission. Spoken replies are off until you turn them on,
+the microphone is used only when you press the mic button, and reminders only fire while the app is open in a tab.
+
+---
+
+# API reference
+
+## API only
 
 ```bash
 npm install

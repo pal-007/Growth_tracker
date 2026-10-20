@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import type { AuthedUser } from '../auth.js';
 import type { DB } from '../db.js';
-import { PRIORITY_XP, awardXp, syncRewards } from '../domain/gamification.js';
+import { PRIORITY_XP, XP, awardXp, syncRewards } from '../domain/gamification.js';
 import { addDays, dateRange, handler, parse, weekday } from '../util.js';
 
 const TABLES = {
@@ -171,6 +171,7 @@ function seedDemo(db: DB, u: AuthedUser) {
     if (rnd() < 0.45) {
       const mood = Math.min(5, Math.max(1, 2 + doneCount + (rnd() < 0.3 ? 1 : 0)));
       db.prepare("INSERT INTO journal (user_id, date, went_well, difficult, mood, energy, demo) VALUES (?, ?, 'Sample entry', 'Sample entry', ?, ?, 1)").run(u.id, date, mood, Math.min(5, mood + (rnd() < 0.5 ? 0 : -1) || 1));
+      awardXp(db, u, 'journal', date, XP.journal, date);
     }
   }
   for (let i = 0; i < 4; i++) {
